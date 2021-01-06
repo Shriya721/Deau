@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+  <!-- update the version number as needed -->
+  <!-- <script defer src="/__/firebase/8.1.1/firebase-app.js"></script> -->
+  <!-- include only the Firebase features as you need -->
+  
+  
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script> 
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
+  
+  <!--
+    initialize the SDK after all desired features are loaded, set useEmulator to false
+    to avoid connecting the SDK to running emulators.
+  -->
+  <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+  <script src='jquery.min.js'></script>
+  <script type="text/javascript" src="db_setup.js"></script>
+  <title>Deau</title>
+  <link rel="stylesheet" type="text/css" href="theme_main.css" />
+    <title>Deau</title>
+    <link rel="stylesheet" type="text/css" href="style_login.css" />
+</head>
+<body>
+    <a href="index.html" class="header-link">
+      <div id="help">
+        <img id="logo" src=images/macaroni.png alt="Macaroni logo" />
+        <p id="header">Deau</p>
+      </div>
+    </a>
+    <div id="page">
+        <h1 class="mainPageContent" id="detailHeading">Create New Meeting</h1>
+        <hr id="headerLine">
+        <form class="mainPageForm" onsubmit="return false" method="post" enctype="multipart/form-data">
+            <div id="flexStyle">
+                <p id="label">Meeting ID</p>
+                <input type="text" name="meetingid" placeholder="Meeting ID" class="pageFormItem" id="meetingid"/>
+            </div>
+            <div id="flexStyle">
+                <p id="label">Password&nbsp;</p>
+                <input type="password" name="password" placeholder="Password" class="pageFormItem" id="userInput"/>
+            </div>
+            <input type="submit" onclick="return saveID()" value="CREATE MEETING" class="pageFormItem" id="create"/>
+        </form>
+        <h4 class="mainPageContent">Have a meeting already? <a href="login.html">Join it</a></h4>
+    </div>
+    <script type="text/javascript">
+        var firebaseConfig = {
+        apiKey: "AIzaSyA7E3SQoH3kQKczTNmjnQhTUlbVuVkR0Tg",
+        authDomain: "deau-e5499.firebaseapp.com",
+        databaseURL: "https://deau-e5499.firebaseio.com",
+        projectId: "deau-e5499",
+        storageBucket: "deau-e5499.appspot.com",
+        messagingSenderId: "711211780953",
+        appId: "1:711211780953:web:4431f3c0612d7d2e371a48"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        let button = document.getElementById("create");
+
+        function saveID() {
+            window.sessionStorage.setItem('meetingId', document.getElementById('meetingid').value)
+            window.sessionStorage.setItem('create', true)
+            let data = {
+                password: document.getElementById('userInput').value
+            }
+            let database = firebase.database()
+            let ref = database.ref("meetings/" + document.getElementById('meetingid').value)
+            ref.update(data).then(() => {
+                window.location.href = "times.html"
+            })
+            return true;
+        }
+    </script>
+</body>
+</html>

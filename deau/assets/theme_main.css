@@ -1,0 +1,31 @@
+﻿/*Style sheet to define unified color scheme*/
+:root {
+  --contrast-color: #FFC300;
+}
+
+body {
+  background: #ffffff;
+}
+
+.active {
+  background-color: #FFE270;
+}
+
+.selected {
+  background-color: var(--contrast-color);
+  color: var(--contrast-color);
+}
+
+a.header-link {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  text-decoration: none;
+}
+.logo-link-div {
+  width:200px;
+  display: flex;
+  align-content:center;
+  flex-direction:row;
+  line-height: 100px;
+}

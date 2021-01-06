@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600&display=swap');
+
+/* css reset */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+
+body{
+    font-family: 'Poppins', sans-serif;
+    background-color: white;
+    color: #2F2D2E;
+}
+
+header {
+    font-weight: 300px;
+    color: #2F2D2E;
+    font-size: 26px;
+    margin-left: 10px;
+}
+
+.mainPageForm {
+    display: flex;
+    flex-direction: column;
+    margin-left: auto;
+    margin-right: auto;
+    width: 40%;
+    padding: 15px;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+}
+
+.pageFormItem {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    padding-left: 0px;
+}
+h1 {
+    margin-left: auto;
+    margin-right: auto;
+}
+.mainPageContent {
+    width: 40%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#help {
+    background-color: white;
+    border-radius: 0px 0px 30px 30px;
+    box-shadow: 0px 5px 8px #b8b8b8;
+    position: fixed;
+    margin: 0;
+    height: 95px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+  }
+
+  #header {
+    font-weight: 500;
+    font-size: 36px;
+    color: #2F2D2E;
+    margin-left: 5px;
+  }
+  
+  #logo {
+    height: 100px;
+    width: 100px;
+    transform: rotate(-5deg);
+    float: left;
+  }
+
+  #page {
+      padding-top: 120px;
+  }
+
+#userInput {
+  border-radius: 30px;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  outline: none;
+  padding: 7px 15px 5px 15px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 300px;
+  z-index: 200;
+  color: #2F2D2E;
+  background-color: rgb(230, 230, 230);
+  width: 80%;
+}
+
+#meetingid {
+    border-radius: 30px;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  outline: none;
+  padding: 7px 15px 5px 15px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 300px;
+  z-index: 200;
+  color: #2F2D2E;
+  background-color: rgb(230, 230, 230);
+  width: 80%;
+}
+
+#join {
+    border: none;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color:#06a5c9;
+    font-size: 16px;
+    font-weight: 300px;
+    margin-top: 15px;
+    color: white;
+    box-shadow: 3px 5px 8px #b8b8b8;
+    border-radius: 30px;
+    padding: 7px 15px 5px 15px;
+    letter-spacing: 1px;
+    text-decoration: none;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 300px;
+    align-items: center;
+    width: 30%;
+    margin-left: 37%;
+}
+
+#create {
+    border: none;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #99C24D;
+    font-size: 16px;
+    font-weight: 300px;
+    margin-top: 15px;
+    color: white;
+    box-shadow: 3px 5px 8px #b8b8b8;
+    border-radius: 30px;
+    padding: 7px 15px 5px 15px;
+    letter-spacing: 1px;
+    text-decoration: none;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 300px;
+    align-items: center;
+    width: 30%;
+    margin-left: 37%;
+}
+
+#detailHeading {
+    font-weight: 300px;
+    color: #2F2D2E;
+    font-size: 26px;
+    /* margin-left: 25px; */
+}
+
+#headerLine {
+    border-top: 1px solid #2F2D2E;
+    width: 40%;
+    position: absolute;
+    left: 30%;
+}
+
+#flexStyle {
+    display: flex;
+    margin-top: 12px;
+}
+
+#label {
+    padding-top: 1.8%;
+    margin-right: 10px;
+}
+
+h4 {
+    text-align: center;
+}

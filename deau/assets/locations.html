@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Deau</title>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
+    
+    <!--
+        initialize the SDK after all desired features are loaded, set useEmulator to false
+        to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <link rel="stylesheet" type="text/css" href="theme_main.css" />
+    <link rel="stylesheet" type="text/css" href="style_locations.css" />
+    <script type="text/javascript" src="db_setup.js"></script>
+  </head>
+  <body>
+    <div id="app">
+        <div id="help">
+          <a href="index.html" class="header-link">
+            <div class="logo-link-div">
+              <img id="logo" src=images/macaroni.png alt="Macaroni logo" />
+              <div id="header">Deau</div>
+            </div>
+          </a>
+            <meeting-id></meeting-id>
+        </div>
+        <div id="page">
+            <p id="detailHeading">Choose a location</p>
+            <hr id="headerLine">
+            <br>
+            <buttons></buttons>
+        </div>
+    </div>
+	<!-- built files will be auto injected -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMqNssGNn55__45egTMj40UF6e0rrIgus"></script>
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyA7E3SQoH3kQKczTNmjnQhTUlbVuVkR0Tg",
+            authDomain: "deau-e5499.firebaseapp.com",
+            databaseURL: "https://deau-e5499.firebaseio.com",
+            projectId: "deau-e5499",
+            storageBucket: "deau-e5499.appspot.com",
+            messagingSenderId: "711211780953",
+            appId: "1:711211780953:web:4431f3c0612d7d2e371a48"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialized");
+        console.log(firebase);
+
+        Vue.component('meeting-id', {
+            data: function() {
+                return {
+                    id: ""
+                }
+            },
+            mounted() {
+                this.id = window.sessionStorage.meetingId
+            },
+            template: `
+            <div id="centered">
+                <p id="meetingId">Meeting ID: {{id}}</p>
+            </div>
+            `
+        })
+
+        Vue.component('buttons', {
+            data: function() {
+                return {
+                    show_inperson: true,
+                    show_remote: false
+                }
+            },
+            methods: {
+                toggleInPerson() {
+                    this.show_inperson = true
+                    document.getElementById('inPersonButton').style.backgroundColor = "#99C24D"
+                    document.getElementById('inPersonButton').style.color = "white"
+                    this.show_remote = false
+                    document.getElementById('remoteButton').style.backgroundColor = "white"
+                    document.getElementById('remoteButton').style.color = "#b8b8b8"
+                },
+                toggleRemote() {
+                    this.show_inperson = false
+                    document.getElementById('inPersonButton').style.backgroundColor = "white"
+                    document.getElementById('inPersonButton').style.color = "#b8b8b8"
+                    this.show_remote = true
+                    document.getElementById('remoteButton').style.backgroundColor = "#99C24D"
+                    document.getElementById('remoteButton').style.color = "white"
+                }
+            },
+            template: `<div>
+                <button v-on:click="toggleInPerson()" id="inPersonButton">IN PERSON</button>
+                <button v-on:click="toggleRemote()" id="remoteButton">REMOTE</button>
+                <inperson v-if="show_inperson" />
+                <remote v-if="show_remote" />
+            </div>`
+        })
+
+        Vue.component('inperson', {
+            data: function() {
+                return {
+                    selected_location: "",
+                    lat: 42.278046,
+                    lng: -83.738220,
+                    map: null
+                }
+            },
+            template: `<div id="inpersonComponent">
+                <div id="textLocation">
+                    <p>Drag the marker on the map to select a meeting location.</p>
+                    <br>
+                    <p>Selected location: {{selected_location}}</p>
+                    <button v-on:click="submit" id="submitLocation">SUBMIT LOCATION & VIEW MEETING DETAILS</button>
+                </div>
+                <div id="map" ref="map">
+                    <map-marker :lat="42.278046" :lng="-83.738220" @sendToParent="fromChild"></map-marker>
+                </div>
+            </div>`,
+            methods: {
+                getMap(callback) {
+                    let vm = this
+                    function checkForMap() {
+                        if (vm.map) callback(vm.map)
+                        else setTimeout(checkForMap, 200)
+                    }
+                    checkForMap()
+                },
+                fromChild(address, lat, lng) {
+                    this.selected_location = address
+                    this.lat = lat
+                    this.lng = lng
+                },
+                submit() {
+                    if (confirm("Finalize meeting location?")) {
+                        window.sessionStorage.setItem('inperson', true)
+                        // write location to database
+                        let data = {
+                            lat: this.lat,
+                            lng: this.lng,
+                            address: this.selected_location
+                        }
+                        let database = firebase.database();
+                        let ref = database.ref('locations/' + window.sessionStorage.meetingId)
+                        ref.update(data).then(() => {
+                            window.location.href = "summary.html";
+                        })
+                        // go to meeting summary page
+                        // window.location.href = "summary.html";
+                    }
+                }
+            },
+            mounted() {
+                this.map = new window.google.maps.Map(this.$refs["map"], {
+                    center: { lat: 42.278046, lng: -83.738220 },
+                    zoom: 16
+                })
+            }
+        })
+
+        Vue.component('remote',{
+            template:
+                `<div id="remoteComponent">
+                    <input v-model="userInput" id="userInput" placeholder="Paste a link here!" ref="userInput"/>
+                    <button v-on:click="addLink" id="addLink">+ Add Link</button>
+                    <ul>
+                        <li v-for="link in links">
+                            {{link}}
+                        </li>
+                    </ul>
+                    <button v-on:click="submit" id="submitLocation">SUBMIT LINKS</button>
+                </div>`
+            ,
+            data: function() {
+                return{
+                    links: [],
+                    userInput: ""
+                }
+            },
+            methods: {
+                addLink: function() {
+                    this.links.push(this.userInput);
+                    this.userInput = "";
+                },
+                submit() {
+                    if (confirm("Finalize meeting time and link?")) {
+                        window.sessionStorage.setItem('inperson', false)
+                        
+                        let data = {
+                            meeting_links: this.links
+                        }
+                        let database = firebase.database();
+                        let ref = database.ref('locations/' + window.sessionStorage.meetingId)
+                        ref.update(data).then(() => {
+                            window.location.href = "summary.html";
+                        })
+                    }
+                }
+            }
+        })
+
+        Vue.component('map-marker', {
+            props: {
+                lat: { type: Number, required: true },
+                lng: { type: Number, required: true }
+            },
+            data: () => ({
+                marker: null,
+                // infowindow: null
+                geocoder: null
+            }),
+            mounted() {
+                this.$parent.getMap(map => {
+                    this.marker = new window.google.maps.Marker({
+                        position: { lat: this.lat, lng: this.lng },
+                        map: map,
+                        draggable: true,
+                        title: "Meeting location"
+                    }),
+                    window.google.maps.event.addListener(this.marker, 'dragend', (ev) => {
+                        this.$emit("dragged")
+                    });
+                })
+
+                this.geocoder = new window.google.maps.Geocoder();
+            },
+            created() {
+                this.$on('dragged', () => {
+                    console.log(this.marker.getPosition().lat() + ' ' + this.marker.getPosition().lng()); // always the same LatLng-Object...
+                    const latlng = {
+                        lat: this.marker.getPosition().lat(),
+                        lng: this.marker.getPosition().lng(),
+                    };
+                    this.geocoder.geocode({location: latlng}, (results, status) => {
+                        if (status === "OK") {
+                            if (results[0]) {
+                                console.log(results[0].formatted_address)
+                                this.$emit('sendToParent', results[0].formatted_address, this.marker.getPosition().lat(), this.marker.getPosition().lng())
+                            } else {
+                                window.alert("No results found");
+                            }
+                        } else {
+                            window.alert("Geocoder failed due to: " + status);
+                        }
+                    });
+                })
+            },
+            beforeDestroy() {
+                this.marker.setMap(null)
+                window.google.maps.event.clearInstanceListeners(this.marker)
+            },
+            render() {
+                null
+            }
+        })
+
+        let app = new Vue({
+            el: '#app'
+        })
+    </script>
+  </body>
+</html>

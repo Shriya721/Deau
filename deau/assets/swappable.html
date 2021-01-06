@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+  <title>swappable!</title>
+  <link rel="stylesheet" type="text/css" href="style_swappable.css" />
+</head>
+<body>
+  <div id="app">
+    <attendees></attendees>
+  </div>
+  <script>
+    Vue.component('attendees', {
+      data: function () {
+        return {
+          attendees: {
+            Blevin: [0,0,1,0]
+          }
+        }
+      },
+      methods: {
+        addUser: function () {
+          //this.attendees.push()
+          console.log("add user!");
+        }
+      },
+      template: `
+        <div>
+          <single-attendee
+            v-for="(times,name) in attendees"
+            v-bind:key="name"
+            :name="name"
+            :data="times"
+            class="user">
+          </single-attendee>
+        </div>
+      `
+    })
+    Vue.component('single-attendee', {
+      data: function () {
+        return {
+          user_selected: false
+        }
+      },
+      props: {
+        name: String,
+        data: Array
+      },
+      methods: {
+        clickSelect: function () {
+          //todo fix later
+          this.selected = true;
+        }
+      },
+      template: `
+        <div v-on:click="clickSelect">
+            {{name}}
+            <time-entry v-if="selected"></time-entry>
+        </div>
+      `
+    })
+    Vue.component('time-entry', {
+      data: function () {
+        return {
+          
+        }
+      },
+      props: {
+        selected: Boolean
+      },
+      methods: {
+        
+      },
+      template: `
+        <div>
+          <name-field></name-field>
+          <calendar></calendar>
+        </div>
+      `
+    })
+    //start of times vue components
+    Vue.component('name-field', {
+    data: function() {
+      return {
+        field: '',
+        name: ''
+      }
+    },
+    methods: {
+      addName: function() {
+        // TODO: add names to database to save/store data for this user(?)
+        let nameButton = document.getElementById("button");
+        button.addEventListener("click", function(){
+          let name = document.getElementById("name").value;
+          if(name =="")
+          {
+            alert("Please enter the fields");
+          }
+          else
+          {
+            var data = {name: name} //make object
+            var database = firebase.database(); //gets database
+            var ref = database.ref("people");
+            ref.push(data);
+          }
+        })
+        this.name = this.field;
+        this.field = '';
+      }
+    },
+    template: `
+      <div>
+       <input type="text"
+              v-model="field"
+              placeholder="name"
+              @keyup.enter="addName"
+>
+       <button v-on:click="addName">Enter Name</button>
+       <p>Signed in as: {{ name }} </p>
+      </div>
+      `
+  })
+
+  Vue.component('calendar', {
+    data: function () {
+      return {
+        day_names: ['Sun', 'Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat'],
+        time_names: ['8 am', '9 am', '10 am', '11 am', '12 pm', '1 pm', '2 pm', '3 pm', '4 pm'],
+        time_slots: [[false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false]],
+        is_active: false,
+        selecting: false,
+        selectorVal: true,
+        handlers: {
+          toggleCell: this.toggleCell,
+          setCell: this.setCell,
+          setSelector: this.setSelector,
+          releaseSelector: this.releaseSelector
+        }
+      }
+    },
+    methods: {
+      toggleCell: function (row_num, col_num) {
+        //fn HAS to use the 'set' or else it won't update correctly
+        //this is due to the way vue detects changes in arrays
+        this.$set(this.time_slots[row_num], col_num,
+                  !this.time_slots[row_num][col_num]);
+        console.log("toggled cell (" + row_num + "," + col_num + ")");
+      },
+      setCell: function (row_num, col_num, val) {
+        this.$set(this.time_slots[row_num], col_num, val);
+      },
+      setSelector: function (value) {
+        console.log("selector set: values going to " + value);
+        this.selecting = true;
+        this.selectorVal = value;
+      },
+      releaseSelector: function () {
+        console.log("released");
+        this.selecting = false;
+      }
+    },
+    template: `
+      <div>
+        <table>
+          <th class="row-header"></th><th v-for="day in day_names">{{day}}</th>
+          <row v-for="(time, rnum) in time_slots"
+          :key="rnum"
+          :row_data="time"
+          :row_num="rnum"
+          :row_name="time_names[rnum]"
+          :selecting="selecting"
+          :selector_val="selectorVal"
+          v-on="handlers"></row>
+        </table>
+      </div>
+    `
+  })
+  Vue.component('row', {
+    data: function () {
+      return {
+        handlers: {
+          toggleCell: this.toggleCell,
+          setCell: this.setCell,
+          setSelector: this.setSelector,
+          releaseSelector: this.releaseSelector
+        }
+      }
+    },
+    props: {
+      row_data: Array,
+      row_num: Number,
+      selecting: Boolean,
+      selector_val: Boolean,
+      row_name: String
+    },
+    methods: {
+      toggleCell: function (col_num) {
+        this.$emit('toggleCell', this.row_num, col_num);
+      },
+      setCell: function (col_num, val) {
+        this.$emit('setCell', this.row_num, col_num, val);
+      },
+      setSelector: function (value) {
+        this.$emit('setSelector', value);
+      },
+      releaseSelector: function () {
+        console.log("row told to release");
+        this.$emit('releaseSelector');
+      }
+    },
+    template: `<tr><td class="row-header">{{row_name}}</td>
+              <cell v-for="(ts, cnum) in row_data"
+              :key="cnum"
+              :cell_data="ts"
+              :col_num="cnum"
+              :selecting="selecting"
+              :selector_val="selector_val"
+              v-on="handlers"></cell></tr>`
+  })
+  Vue.component('cell', {
+    data: function () {
+      return { hover: false }},
+    props: {
+      cell_data: Boolean,
+      col_num: Number,
+      selecting: Boolean,
+      selector_val: Boolean
+    },
+    methods: {
+      toggleCell: function () {
+        this.$emit('toggleCell', this.col_num);
+      },
+      setCell: function (value) {
+        this.$emit('setCell', this.col_num, value);
+      },
+      setSelector: function () {
+        this.toggleCell();
+        this.$emit('setSelector', !this.cell_data);
+      },
+      releaseSelector: function () {
+        this.$emit('releaseSelector');
+      },
+      mo: function () {
+        if (this.selecting) {
+          this.setCell(this.selector_val);
+        }
+      }
+    },
+    template: `<td :class="{selected: cell_data}"
+                  @mousedown="setSelector"
+                  @mouseup="releaseSelector"
+                  @mouseover="mo"
+                  v-on:click="toggleCell">
+                  <span v-if: selected>*</span>
+                  </td>`
+  })
+    //end of times vue components
+    let app = new Vue({
+
+      el: '#app',
+      data: {
+        attendees: [
+          { name: "Blevin", availability: [0, 0, 0, 1] }
+        ]
+      }
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Deau</title>
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
+
+  <!--
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+  -->
+  <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+  <link rel="stylesheet" type="text/css" href="theme_main.css" />
+  <link rel="stylesheet" type="text/css" href="style_summary.css" />
+  <script type="text/javascript" src="db_setup.js"></script>
+</head>
+<body>
+  <script src="process_times.js"></script>
+  <hr class="leftHeaderLine">
+  <div id="app">
+    <div id="help">
+      <a href="index.html" class="header-link">
+        <div class="logo-link-div">
+          <img id="logo" src=images/macaroni.png alt="Macaroni logo" />
+          <div id="header">Deau</div>
+        </div>
+      </a>
+      <meeting-id></meeting-id>
+    </div>
+    <div id="page">
+      <div id="timeLocation">
+        <meeting-time></meeting-time>
+      </div>
+      <div id="right-col-div">
+        <div>
+        <members></members>
+        <email></email>
+        </div>
+        <br>
+        <meeting-location></meeting-location>
+
+      </div>
+    </div>
+  </div>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMqNssGNn55__45egTMj40UF6e0rrIgus"></script>
+  <script>
+
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyA7E3SQoH3kQKczTNmjnQhTUlbVuVkR0Tg",
+            authDomain: "deau-e5499.firebaseapp.com",
+            databaseURL: "https://deau-e5499.firebaseio.com",
+            projectId: "deau-e5499",
+            storageBucket: "deau-e5499.appspot.com",
+            messagingSenderId: "711211780953",
+            appId: "1:711211780953:web:4431f3c0612d7d2e371a48"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialized");
+        console.log(firebase);
+        Vue.component('meeting-id', {
+            data: function() {
+                return {
+                    id: ""
+                }
+            },
+            mounted() {
+                this.id = window.sessionStorage.meetingId
+            },
+            template: `
+            <div id="centered">
+                <p id="meetingId">Meeting details for Meeting ID: {{id}}</p>
+            </div>
+            `
+        })
+        Vue.component('meeting-time', {
+            data: function() {
+                return {
+                  time: "",
+                  timesArray: [],
+                  colHeaders: ["13/8", "12/7", "11/5", "10/4", "9/3", "8/2", "7/1"]
+                }
+            },
+            mounted() {
+              let database = firebase.database()
+                firebase.database().ref('meetings/' + window.sessionStorage.meetingId).once('value').then((snapshot) => {
+                //firebase.database().ref('meetings/meeting0001').once('value').then((snapshot) => {
+                  input = snapshot.val().attendees
+                  console.log(input);
+                  this.colHeaders = snapshot.val().Dates;
+                  console.log(this.colHeaders);
+                  console.log("look here");
+                  //processTimesDict(reformatUserTimes(ex), true);
+                  timesDict = reformatUserTimes(input);
+                  console.log("what")
+                  this.timesArray = processTimesDict(timesDict, true);
+                  console.log(this.timesArray);
+              });
+            },
+            template: `
+            <div>
+                <p id="detailHeading">Meeting time</p>
+                <hr class="leftHeaderLine">
+                <br>
+                <p>{{time}}</p>
+                <output-calendar
+                :cell_values="timesArray"
+                :col_headers="colHeaders"
+                ></output-calendar>
+            </div>
+            `
+        })
+        Vue.component('meeting-location', {
+            data: function() {
+                return {
+                    address: "",
+                    lat: 42.278046,
+                    lng: -83.738220,
+                    links: [],
+                    inperson: window.sessionStorage.inperson
+                }
+            },
+            mounted() {
+                this.inperson = window.sessionStorage.inperson
+                if (this.inperson == "true") {
+                    let database = firebase.database()
+                    firebase.database().ref('locations/' + window.sessionStorage.meetingId).once('value').then((snapshot) => {
+                        this.address = snapshot.val().address
+                        this.lat = snapshot.val().lat
+                        this.lng = snapshot.val().lng
+                        this.map = new window.google.maps.Map(this.$refs["map"], {
+                            center: { lat: this.lat, lng: this.lng },
+                            zoom: 16
+                        })
+                    });
+                } else {
+                    let database = firebase.database()
+                    firebase.database().ref('locations/' + window.sessionStorage.meetingId).once('value').then((snapshot) => {
+                        this.links = snapshot.val().meeting_links
+                    });
+                }
+            },
+            template: `
+            <div id="meeting-location">
+                <div v-if="inperson == 'true'">
+                    <p id="detailHeading">Meeting location</p>
+                    <hr class="rightHeaderLine">
+                    <br>
+                    <p>{{address}}</p>
+                    <div id="map" ref="map">
+                        <map-marker :lat='lat' :lng='lng'></map-marker>
+                    </div>
+                </div>
+                <div v-else>
+                    <p id="detailHeading">Meeting links</p>
+                    <hr class="rightHeaderLine">
+                    <br>
+                    <ul>
+                        <li v-for="link in links">
+                            {{link}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            `,
+            methods: {
+                getMap(callback) {
+                    let vm = this
+                    function checkForMap() {
+                        if (vm.map) callback(vm.map)
+                        else setTimeout(checkForMap, 200)
+                    }
+                    checkForMap()
+                }
+            }
+        })
+        Vue.component('map-marker', {
+            props: {
+                lat: { type: Number, required: true },
+                lng: { type: Number, required: true }
+            },
+            data: () => ({
+                marker: null
+            }),
+            mounted() {
+                this.$parent.getMap(map => {
+                    this.marker = new window.google.maps.Marker({
+                        position: { lat: this.lat, lng: this.lng },
+                        map: map,
+                        title: "Meeting location"
+                    })
+                })
+            },
+            beforeDestroy() {
+                this.marker.setMap(null)
+                window.google.maps.event.clearInstanceListeners(this.marker)
+            },
+            render() {
+                null
+            }
+        })
+        Vue.component('members', {
+            data: function() {
+                return {
+                    attendees: []
+                }
+            },
+            mounted() {
+                let database = firebase.database()
+                firebase.database().ref('meetings/' + window.sessionStorage.meetingId).once('value').then((snapshot) => {
+                    input = snapshot.val().attendees
+                    for (let attendee in input) {
+                        this.attendees.push(attendee)
+                        // console.log(attendee)
+                    }
+                });
+            },
+            template: `
+            <div>
+                <p id="detailHeading">Attendees</p>
+                <hr class="rightHeaderLine">
+                <br>
+                <ul>
+                    <li v-for="attendee in attendees">
+                        {{attendee}}
+                    </li>
+                </ul>
+            </div>
+            `
+        })
+      Vue.component('output-calendar', {
+        props: {
+          cell_values: Array,
+          col_headers: Array
+        },
+        data: function () { return {
+          day_names: ['Sun', 'Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat'],
+          time_names: ['8 am', '', '', '', '9 am', '', '', '', '10 am', '', '', '',
+              '11 am', '', '', '', '12 pm', '', '', '', '1 pm', '', '', '', '2 pm', '', '', '',
+              '3 pm', '', '', '', '4 pm', '', '', '', '5 pm', '', '', '', '6 pm', '', '', '',
+              '7 pm', '', '', '', '8 pm', '', '', ''],
+          input: '',
+          }
+        },
+        methods: {
+
+        },
+        template: `
+          <div id="output-calendar">
+            <table>
+              <th class="row-header"></th>
+              <th class="day-name" v-for="day in col_headers">{{day}}</th>
+              <output-row v-for="(time, rnum) in cell_values"
+              :key="rnum"
+              :row_data="time"
+              :row_num="rnum"
+              :row_name="time_names[rnum]"
+              ></output-row>
+            </table>
+          </div>
+        `
+      })
+      Vue.component('output-row', {
+        data: function () {
+          return {
+
+          }
+        },
+        props: {
+          row_data: Array,
+          row_num: Number,
+          row_name: String
+        },
+        template: `<tr><td v-if="row_name!=''" rowspan=4
+                    class="row-header" id="rowName">{{row_name}}</td>
+                  <output-cell v-for="(ts, cnum) in row_data"
+                  :key="cnum"
+                  :cell_data="ts"
+                  :col_num="cnum"
+                  ></output-cell></tr>`
+      })
+      Vue.component('output-cell', {
+        data: function () {
+          return { hover: false }},
+        props: {
+          cell_data: Boolean,
+          col_num: Number
+        },
+        template: `<td :class="{selected: cell_data, unselected: !cell_data}"
+                      >.</td>`
+      })
+        
+      
+      Vue.component('email', {
+        data:function(){
+          return {email: ''
+          }
+        },
+        props:{
+          email: '',
+          field: ''
+        },
+        methods:{
+            addEmail: function(){
+                this.email = this.field
+            }
+        },
+        template: `
+      <div id="emailField">
+       <input class="email-in" type="text"
+              v-model="field"
+              placeholder="Email"
+              id="email"
+              @keyup.enter="addEmail"
+>
+       <button v-on:click="addEmail" id="addEmail">Send Email</button>
+       <p id="signedInAs">Email Sent to: {{ email }} </p>
+      </div>
+      `
+        
+      })
+    let app = new Vue({
+            el: '#app'
+        })
+  </script>
+</body>
+</html>

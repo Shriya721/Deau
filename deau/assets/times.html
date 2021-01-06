@@ -1,0 +1,404 @@
+﻿﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- update the version number as needed -->
+  <!-- <script defer src="/__/firebase/8.1.1/firebase-app.js"></script> -->
+  <!-- include only the Firebase features as you need -->
+
+
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
+
+  <!--
+    initialize the SDK after all desired features are loaded, set useEmulator to false
+    to avoid connecting the SDK to running emulators.
+  -->
+  <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+  <script src='jquery.min.js'></script>
+  <script type="text/javascript" src="db_setup.js"></script>
+  <title>Deau</title>
+  <link rel="stylesheet" type="text/css" href="theme_main.css" />
+  <link rel="stylesheet" type="text/css" href="style_times.css" />
+</head>
+<body>
+  <div id="page-header">
+
+  </div>
+
+
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+       https://firebase.google.com/docs/web/setup#available-libraries -->
+
+  <script></script>
+  <div id="app">
+    <div id="help">
+      <a href="index.html" class="header-link">
+        <div class="logo-link-div">
+          <img id="logo" src=images/macaroni.png alt="Macaroni logo" />
+          <div id="header">Deau</div>
+        </div>
+      </a>
+      <meeting-id></meeting-id>
+    </div>
+    <p id="detailHeading">Choose times</p>
+    <hr id="headerLine">
+    <br>
+    <div id="flexStyle">
+      <name-field></name-field>
+      <div id="page">
+        <!-- <name-field></name-field> -->
+        <p>
+          Drag and hold to select times that work!
+        </p>
+        <br>
+        <calendar></calendar>
+        <!--below was changed from a button element temporarily until we get the backend working-->
+        <!-- <a href="locations.html" class="button">Pick Location</a>   -->
+      </div>
+    </div>
+  </div>
+  <script>
+     // Your web app's Firebase configuration
+     var firebaseConfig = {
+      apiKey: "AIzaSyA7E3SQoH3kQKczTNmjnQhTUlbVuVkR0Tg",
+      authDomain: "deau-e5499.firebaseapp.com",
+      databaseURL: "https://deau-e5499.firebaseio.com",
+      projectId: "deau-e5499",
+      storageBucket: "deau-e5499.appspot.com",
+      messagingSenderId: "711211780953",
+      appId: "1:711211780953:web:4431f3c0612d7d2e371a48"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase initialized");
+    console.log(firebase);
+
+    /* -- GLOBAL VARIABLE THINGS WE NEED ACROSS COMPONENTS -- */
+    let meetingId = window.sessionStorage.meetingId;
+    let user = "";
+    let create = window.sessionStorage.create;
+    // let create = false;
+    let chosen_dates = [];
+
+    if (create === "false") {
+      let database = firebase.database();
+      let ref = database.ref("meetings/" + meetingId + "/Dates");
+      ref.on('value', (snapshot) => {
+        const data = snapshot.val();
+        console.log(data);
+        chosen_dates = data;
+      });
+    }
+    /* -- END -- */
+
+  Vue.component('meeting-id', {
+      data: function() {
+          return {
+              id: ""
+          }
+      },
+      mounted() {
+          this.id = window.sessionStorage.meetingId
+      },
+      template: `
+      <div id="centered">
+          <p id="meetingId">Meeting ID: {{id}}</p>
+      </div>
+      `
+  })
+
+  Vue.component('name-field', {
+    data: function() {
+      return {
+        field: '',
+        name: ''
+      }
+    },
+    methods: {
+      addName: function() {
+        console.log("Addname");
+        // TODO: add names to database to save/store data for this user(?)
+
+        this.name = this.field;
+        this.field = '';
+        if (this.name == "") {
+          alert("Please enter the fields.");
+        } else {
+          // let data = {Name: this.name}; // make object
+          user = this.name;
+          let database = firebase.database(); // gets database
+          let ref = database.ref("meetings/" + meetingId + "/attendees/" + user);
+          // ref.update({
+          //   Name: user
+          // });
+        }
+      }
+    },
+    template: `
+      <div id="nameField">
+       <input type="text"
+              v-model="field"
+              placeholder="Name"
+              id="name"
+              @keyup.enter="addName"
+>
+       <button v-on:click="addName" id="addName">Enter Name</button>
+       <p id="signedInAs">Signed in as: {{ name }} </p>
+      </div>
+      `
+  })
+
+  Vue.component('calendar', {
+    data: function () {
+      return {
+        day_names: ['Sun', 'Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat'],
+        time_names: ['8 am', '', '', '', '9 am', '', '', '', '10 am', '', '', '',
+        '11 am', '', '', '', '12 pm', '', '', '', '1 pm', '', '', '', '2 pm', '', '', '',
+        '3 pm', '', '', '', '4 pm', '', '', '', '5 pm', '', '', '', '6 pm', '', '', '',
+        '7 pm', '', '', '', '8 pm', '', '', ''],
+        time_slots: [[false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false],
+          [false, false, false, false, false, false, false]],
+        is_active: false,
+        selecting: false,
+        selectorVal: true,
+        handlers: {
+          toggleCell: this.toggleCell,
+          setCell: this.setCell,
+          setSelector: this.setSelector,
+          releaseSelector: this.releaseSelector
+        },
+        input: '',
+        col_headers: []
+      }
+    },
+    mounted() {
+          this.col_headers = create !== "false" ? [] : chosen_dates;
+          console.log(this.col_headers);
+      },
+    methods: {
+      toggleCell: function (row_num, col_num) {
+        //fn HAS to use the 'set' or else it won't update correctly
+        //this is due to the way vue detects changes in arrays
+        this.$set(this.time_slots[row_num], col_num,
+                  !this.time_slots[row_num][col_num]);
+        console.log("toggled cell (" + row_num + "," + col_num + ")");
+      },
+      setCell: function (row_num, col_num, val) {
+        this.$set(this.time_slots[row_num], col_num, val);
+      },
+      setSelector: function (value) {
+        console.log("selector set: values going to " + value);
+        this.selecting = true;
+        this.selectorVal = value;
+      },
+      releaseSelector: function () {
+        console.log("released");
+        this.selecting = false;
+      },
+      submit() {
+        if (confirm("Finalize meeting times?")) {
+          let availability = this.time_slots;
+          let database = firebase.database(); // gets database
+          let ref = database.ref("meetings/" + meetingId + "/attendees/" + user);
+          ref.update({
+            Times: availability
+          });
+
+          window.location.href = "locations.html";
+          // handle write to database
+        }
+      },
+      /* -- START DATE PICKER -- */
+      updateDate: function () {
+        let database = firebase.database();
+        if (create === "false") {
+          let ref = database.ref("meetings/" + meetingId + "/Dates");
+          ref.on('value', (snapshot) => {
+            const data = snapshot.val();
+            console.log(data);
+            this.col_headers = data;
+          });
+        } else {
+          let start = new Date(this.input);
+          sevenDays = [];
+          for (var i = 1; i <= 7; i++) {
+            let curr = new Date();
+            curr.setMonth(start.getMonth(), start.getDate() + i);
+            let weekday = this.day_names[curr.getDay()];
+            let output = weekday + " " + (curr.getMonth() + 1) + "/" + curr.getDate();
+            sevenDays.push(output);
+          }
+          this.col_headers = sevenDays;
+
+          let ref = database.ref("meetings/" + meetingId);
+          ref.update({
+            Dates: this.col_headers
+          });
+        }
+      }
+      /* --END -- DATE PICKER */
+    },
+    template: `
+      <div>
+        <div id="flexStyle">
+          <form>
+            <label for="date">Enter Start Date: </label>
+            <input type="date" name="date" id="date" v-model="input">
+          </form>
+          <button v-on:click="updateDate" id="updateDate">Submit</button>
+        </div>
+        <table>
+          <th class="row-header"></th><th v-for="day in col_headers">{{day}}</th>
+          <row v-for="(time, rnum) in time_slots"
+          :key="rnum"
+          :row_data="time"
+          :row_num="rnum"
+          :row_name="time_names[rnum]"
+          :selecting="selecting"
+          :selector_val="selectorVal"
+          v-on="handlers"></row>
+        </table>
+        <button v-on:click="submit" id="submitTimes">SUBMIT TIMES & SELECT LOCATION</button>
+      </div>
+    `
+  })
+  Vue.component('row', {
+    data: function () {
+      return {
+        handlers: {
+          toggleCell: this.toggleCell,
+          setCell: this.setCell,
+          setSelector: this.setSelector,
+          releaseSelector: this.releaseSelector
+        }
+      }
+    },
+    props: {
+      row_data: Array,
+      row_num: Number,
+      selecting: Boolean,
+      selector_val: Boolean,
+      row_name: String
+    },
+    methods: {
+      toggleCell: function (col_num) {
+        this.$emit('toggleCell', this.row_num, col_num);
+      },
+      setCell: function (col_num, val) {
+        this.$emit('setCell', this.row_num, col_num, val);
+      },
+      setSelector: function (value) {
+        this.$emit('setSelector', value);
+      },
+      releaseSelector: function () {
+        console.log("row told to release");
+        this.$emit('releaseSelector');
+      }
+    },
+    template: `<tr><td class="row-header" id="rowName">{{row_name}}</td>
+              <cell v-for="(ts, cnum) in row_data"
+              :key="cnum"
+              :cell_data="ts"
+              :col_num="cnum"
+              :selecting="selecting"
+              :selector_val="selector_val"
+              v-on="handlers"></cell></tr>`
+  })
+  Vue.component('cell', {
+    data: function () {
+      return { hover: false }},
+    props: {
+      cell_data: Boolean,
+      col_num: Number,
+      selecting: Boolean,
+      selector_val: Boolean
+    },
+    methods: {
+      toggleCell: function () {
+        this.$emit('toggleCell', this.col_num);
+      },
+      setCell: function (value) {
+        this.$emit('setCell', this.col_num, value);
+      },
+      setSelector: function () {
+        this.toggleCell();
+        this.$emit('setSelector', !this.cell_data);
+      },
+      releaseSelector: function () {
+        this.$emit('releaseSelector');
+      },
+      mo: function () {
+        if (this.selecting) {
+          this.setCell(this.selector_val);
+        }
+      }
+    },
+    template: `<td :class="{selected: cell_data}"
+                  @mousedown="setSelector"
+                  @mouseup="releaseSelector"
+                  @mouseover="mo"
+                  v-on:click="toggleCell"></td>`
+  })
+
+  let app = new Vue({
+    el: '#app'
+  })
+  </script>
+</body>
+</html>
+
